@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rocky1638/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true rocky1638/react-test yarn test
+
+after_success:
+  - docker build -t rocky1638/multi-client ./client
+  - docker build -t rocky1638/multi-nginx ./nginx
+  - docker build -t rocky1638/multi-server ./server
+  - docker build -t rocky1638/multi-worker ./worker
+  # login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # push these images to docker hub
+  - docker push rocky1638/multi-client
+  - docker push rocky1638/multi-nginx
+  - docker push rocky1638/multi-server
+  - docker push rocky1638/multi-worker
